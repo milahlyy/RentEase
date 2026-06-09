@@ -1,0 +1,149 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { apiRequest } from "../../../lib/api";
+
+const loginSchema = z.object({
+  email: z.string().trim().email("Format email tidak valid"),
+  password: z.string().min(1, "Password wajib diisi"),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+
+type LoginResponse = {
+  token: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+  };
+};
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [formError, setFormError] = useState<string | null>(null);
+  const {
+    formState: { errors, isSubmitting },
+    handleSubmit,
+    register,
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  async function onSubmit(values: LoginFormValues) {
+    setFormError(null);
+    const response = await apiRequest<LoginResponse>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(values),
+    });
+
+    if (!response.success) {
+      setFormError(response.error);
+      return;
+    }
+
+    localStorage.setItem("rentease_token", response.data.token);
+    router.push("/");
+  }
+
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-[var(--color-bg-subtle)] px-4 py-12">
+      <section className="w-full max-w-md">
+        <Link className="mx-auto mb-6 block text-center text-2xl font-bold text-primary" href="/">
+          RentEase
+        </Link>
+        <div className="rounded-lg border border-[var(--color-border)] bg-white p-6 shadow-sm">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-slate-900">Masuk</h1>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Lanjutkan untuk mengelola rental dan booking kamu.
+            </p>
+          </div>
+
+          <button
+            className="flex w-full items-center justify-center rounded-md border border-[var(--color-border)] bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 active:scale-95"
+            type="button"
+          >
+            Lanjutkan dengan Google
+          </button>
+
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-[var(--color-border)]" />
+            <span className="text-xs font-medium uppercase text-slate-400">
+              atau masuk dengan email
+            </span>
+            <div className="h-px flex-1 bg-[var(--color-border)]" />
+          </div>
+
+          <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-700" htmlFor="email">
+                Email <span className="text-red-600">*</span>
+              </label>
+              <input
+                className={`w-full rounded-md border bg-white px-3 py-2.5 text-sm outline-none transition-colors placeholder:text-slate-400 focus:border-primary ${
+                  errors.email ? "border-red-500" : "border-[var(--color-border)]"
+                }`}
+                id="email"
+                placeholder="nama@email.com"
+                type="email"
+                {...register("email")}
+              />
+              {errors.email && <p className="text-xs text-red-600">{errors.email.message}</p>}
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-700" htmlFor="password">
+                Password <span className="text-red-600">*</span>
+              </label>
+              <input
+                className={`w-full rounded-md border bg-white px-3 py-2.5 text-sm outline-none transition-colors placeholder:text-slate-400 focus:border-primary ${
+                  errors.password ? "border-red-500" : "border-[var(--color-border)]"
+                }`}
+                id="password"
+                placeholder="Masukkan password"
+                type="password"
+                {...register("password")}
+              />
+              {errors.password && (
+                <p className="text-xs text-red-600">{errors.password.message}</p>
+              )}
+            </div>
+
+            {formError && (
+              <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {formError}
+              </p>
+            )}
+
+            <button
+              className="flex w-full items-center justify-center rounded-md bg-primary px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={isSubmitting}
+              type="submit"
+            >
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Masuk
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-slate-500">
+            Belum punya akun?{" "}
+            <Link className="font-semibold text-primary hover:text-primary-hover" href="/auth/register">
+              Daftar
+            </Link>
+          </p>
+        </div>
+      </section>
+    </main>
+  );
+}

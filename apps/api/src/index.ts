@@ -1,16 +1,15 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { categories } from "@rentease/shared";
+import { auth, success, type Bindings } from "./auth";
 
-type Bindings = {
-  DB: D1Database;
+type AppBindings = Bindings & {
   ASSETS: R2Bucket;
-  JWT_SECRET: string;
   MIDTRANS_SERVER_KEY: string;
   RESEND_API_KEY: string;
 };
 
-const app = new Hono<{ Bindings: Bindings }>();
+const app = new Hono<{ Bindings: AppBindings }>();
 
 app.use(
   "*",
@@ -22,14 +21,13 @@ app.use(
 );
 
 app.get("/health", (c) => {
-  return c.json({
-    ok: true,
-    service: "rentease-api",
-  });
+  return c.json(success({ service: "rentease-api" }));
 });
 
 app.get("/categories", (c) => {
-  return c.json({ data: categories });
+  return c.json(success({ categories }));
 });
+
+app.route("/auth", auth);
 
 export default app;

@@ -1,11 +1,13 @@
+import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
   email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
   name: text("name").notNull(),
   phone: text("phone"),
-  role: text("role", { enum: ["renter", "lender", "dual"] }).notNull().default("renter"),
+  role: text("role", { enum: ["renter", "lender", "both"] }).notNull().default("renter"),
   avatarUrl: text("avatar_url"),
   isVerified: integer("is_verified", { mode: "boolean" }).notNull().default(false),
   createdAt: text("created_at").notNull(),
@@ -89,3 +91,8 @@ export const disputes = sqliteTable("disputes", {
   status: text("status").notNull(),
   resolvedAt: text("resolved_at"),
 });
+
+export type UserSelect = InferSelectModel<typeof users>;
+export type UserInsert = InferInsertModel<typeof users>;
+export type KycDocumentSelect = InferSelectModel<typeof kycDocuments>;
+export type KycDocumentInsert = InferInsertModel<typeof kycDocuments>;

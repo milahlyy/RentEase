@@ -9,9 +9,11 @@
   "scripts": {
     "build": "tsc --noEmit",
     "lint": "tsc --noEmit",
+    "seed": "bun run seed.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.32.0"
   },
   "devDependencies": {

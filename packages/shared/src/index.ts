@@ -9,9 +9,21 @@ export const categories = [
 
 export const listingStatuses = ["draft", "active", "inactive", "rented"] as const;
 export const kycStatuses = ["pending", "verified", "rejected"] as const;
-export const userRoles = ["renter", "lender", "dual"] as const;
+export const userRoles = ["renter", "lender", "both"] as const;
 
 export type Category = (typeof categories)[number]["value"];
 export type ListingStatus = (typeof listingStatuses)[number];
 export type KycStatus = (typeof kycStatuses)[number];
 export type UserRole = (typeof userRoles)[number];
+
+export type User = {
+  id: string;
+  email: string;
+  name: string;
+  phone: string | null;
+  role: UserRole;
+  avatarUrl: string | null;
+  isVerified: boolean;
+  kycStatus: KycStatus;
+  createdAt: string;
+};

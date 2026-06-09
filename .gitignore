@@ -5,6 +5,7 @@ node_modules/
 dist/
 build/
 .wrangler/
+.wrangler-config/
 .dev.vars
 coverage/
 *.log
