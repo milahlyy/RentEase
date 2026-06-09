@@ -360,5 +360,5 @@ async function getUserRowByEmail(db: D1Database, email: string): Promise<UserRow
     .first<UserRow>();
 }
 
-export { auth, failure, success };
+export { auth, failure, getBearerToken, success, verifyJwt };
 export type { ApiResponse, Bindings };

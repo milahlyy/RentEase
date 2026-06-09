@@ -27,3 +27,36 @@ export type User = {
   kycStatus: KycStatus;
   createdAt: string;
 };
+
+export type ListingOwner = {
+  id: string;
+  name: string;
+  isVerified: boolean;
+  rating: number;
+};
+
+export type ListingPhoto = {
+  id: string;
+  url: string;
+  order: number;
+  isPrimary: boolean;
+};
+
+export type Listing = {
+  id: string;
+  ownerId: string;
+  title: string;
+  category: string;
+  description: string;
+  condition: number;
+  pricePerDay: number;
+  depositAmount: number;
+  location: string;
+  status: ListingStatus;
+  createdAt: string;
+  rating: number;
+  reviewCount: number;
+  primaryPhotoUrl: string | null;
+  photos?: ListingPhoto[];
+  owner: ListingOwner;
+};

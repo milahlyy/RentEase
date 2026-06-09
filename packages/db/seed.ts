@@ -2,7 +2,7 @@ import { Database } from "bun:sqlite";
 import bcrypt from "bcryptjs";
 import { and, eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/bun-sqlite";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import {
   kycDocuments,
@@ -230,11 +230,10 @@ function findLocalDatabasePath() {
   ];
 
   for (const candidate of candidates) {
-    const glob = new Bun.Glob(`${candidate}/**/*.sqlite`);
-    const matches = Array.from(glob.scanSync({ cwd: root }));
+    const matches = findSqliteFiles(join(root, candidate));
 
     if (matches[0]) {
-      return join(root, matches[0]);
+      return matches[0];
     }
   }
 
@@ -247,6 +246,29 @@ function findLocalDatabasePath() {
   throw new Error(
     "Local SQLite database not found. Run the D1 local migration first or set LOCAL_DB_PATH.",
   );
+}
+
+function findSqliteFiles(directory: string): string[] {
+  if (!existsSync(directory)) {
+    return [];
+  }
+
+  const files: string[] = [];
+
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const path = join(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      files.push(...findSqliteFiles(path));
+      continue;
+    }
+
+    if (entry.isFile() && entry.name.endsWith(".sqlite") && entry.name !== "metadata.sqlite") {
+      files.push(path);
+    }
+  }
+
+  return files.sort();
 }
 
 function buildAvailabilityBlocks(now: Date) {

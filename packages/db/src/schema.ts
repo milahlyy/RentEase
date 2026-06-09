@@ -96,3 +96,7 @@ export type UserSelect = InferSelectModel<typeof users>;
 export type UserInsert = InferInsertModel<typeof users>;
 export type KycDocumentSelect = InferSelectModel<typeof kycDocuments>;
 export type KycDocumentInsert = InferInsertModel<typeof kycDocuments>;
+export type ListingSelect = InferSelectModel<typeof listings>;
+export type ListingInsert = InferInsertModel<typeof listings>;
+export type ListingPhotoSelect = InferSelectModel<typeof listingPhotos>;
+export type ListingPhotoInsert = InferInsertModel<typeof listingPhotos>;
