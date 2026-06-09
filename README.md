@@ -4,7 +4,7 @@ RentEase is a P2P rental marketplace web app for Indonesia. The MVP focuses on t
 
 ## Stack
 
-- Monorepo: Turborepo + pnpm workspaces
+- Monorepo: Turborepo + Bun workspaces
 - Web: Next.js 14 App Router, Tailwind CSS
 - API: Hono on Cloudflare Workers
 - Database: Cloudflare D1 with Drizzle ORM
@@ -27,8 +27,8 @@ docs/         Product and architecture notes
 ## Getting Started
 
 ```bash
-pnpm install
-pnpm dev
+bun install
+bun dev
 ```
 
 Copy `.env.example` to `.env` and fill in the values for local development.
