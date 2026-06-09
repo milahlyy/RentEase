@@ -1,0 +1,20 @@
+{
+  "name": "@rentease/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.32.0"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.23.0"
+  }
+}
