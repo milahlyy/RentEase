@@ -11,9 +11,9 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "format": "prettier --write .",
-    "lint": "turbo lint",
+    "lint": "bun run --filter @rentease/shared lint && bun run --filter @rentease/db lint && bun run --filter @rentease/api lint && bun run --filter @rentease/web lint",
     "seed": "bun run --filter @rentease/db seed",
-    "typecheck": "turbo typecheck"
+    "typecheck": "bun run --filter @rentease/shared typecheck && bun run --filter @rentease/db typecheck && bun run --filter @rentease/api typecheck && bun run --filter @rentease/web typecheck"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",

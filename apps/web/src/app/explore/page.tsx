@@ -3,9 +3,11 @@
 import { categories, type Listing } from "@rentease/shared";
 import { SlidersHorizontal, Search, PackageOpen, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { apiRequest } from "../../lib/api";
 import { ListingCard, ListingCardSkeleton } from "../../components/listing-card";
+import { PageContainer, PageHeader } from "../../components/page-layout";
+import { MobileBottomNav, SiteHeader } from "../../components/site-header";
 
 type ListingsResponse = {
   listings: Listing[];
@@ -56,6 +58,7 @@ function ExploreContent() {
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const requestIdRef = useRef(0);
   const limit = 20;
 
   const query = useMemo(
@@ -64,12 +67,19 @@ function ExploreContent() {
   );
 
   useEffect(() => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+
     const timeout = window.setTimeout(async () => {
       const queryString = query.toString();
       router.replace(queryString ? `/explore?${queryString}` : "/explore", { scroll: false });
       setIsLoading(true);
 
       const response = await apiRequest<ListingsResponse>(`/listings?${queryString}`);
+
+      if (requestIdRef.current !== requestId) {
+        return;
+      }
 
       if (response.success) {
         setTotal(response.data.total);
@@ -84,7 +94,9 @@ function ExploreContent() {
       setIsLoading(false);
     }, 300);
 
-    return () => window.clearTimeout(timeout);
+    return () => {
+      window.clearTimeout(timeout);
+    };
   }, [query, router]);
 
   function resetFilters() {
@@ -108,7 +120,7 @@ function ExploreContent() {
           Urutkan
         </label>
         <select
-          className="mt-1.5 w-full rounded-md border border-[var(--color-border)] bg-white px-3 py-2.5 text-sm outline-none focus:border-primary"
+          className="mt-1.5 w-full rounded-lg border border-[var(--color-border)] bg-surface px-3 py-2.5 text-sm outline-none shadow-inset-soft focus:border-primary"
           id="sort"
           value={sort}
           onChange={(event) => resetPageAnd(() => setSort(event.target.value))}
@@ -127,7 +139,7 @@ function ExploreContent() {
             <label className="flex items-center gap-2 text-sm text-slate-600" key={item.value}>
               <input
                 checked={category === item.value}
-                className="h-4 w-4 rounded border-slate-300 text-primary"
+                className="h-4 w-4 rounded border-[var(--color-border-strong)] text-primary"
                 type="checkbox"
                 onChange={() =>
                   resetPageAnd(() => setCategory(category === item.value ? "" : item.value))
@@ -143,14 +155,14 @@ function ExploreContent() {
         <p className="text-sm font-medium text-slate-700">Rentang harga / hari</p>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <input
-            className="w-full rounded-md border border-[var(--color-border)] px-3 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-primary"
+            className="w-full rounded-lg border border-[var(--color-border)] bg-surface px-3 py-2.5 text-sm outline-none shadow-inset-soft placeholder:text-slate-400 focus:border-primary"
             inputMode="numeric"
             placeholder="Min"
             value={minPrice}
             onChange={(event) => resetPageAnd(() => setMinPrice(event.target.value))}
           />
           <input
-            className="w-full rounded-md border border-[var(--color-border)] px-3 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-primary"
+            className="w-full rounded-lg border border-[var(--color-border)] bg-surface px-3 py-2.5 text-sm outline-none shadow-inset-soft placeholder:text-slate-400 focus:border-primary"
             inputMode="numeric"
             placeholder="Max"
             value={maxPrice}
@@ -160,7 +172,7 @@ function ExploreContent() {
       </div>
 
       <button
-        className="w-full rounded-md border border-[var(--color-border)] px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 active:scale-95"
+        className="w-full rounded-lg border border-[var(--color-border)] bg-surface-raised px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-soft-sm transition-shadow hover:shadow-soft active:scale-95"
         type="button"
         onClick={resetFilters}
       >
@@ -171,45 +183,47 @@ function ExploreContent() {
 
   return (
     <main className="min-h-screen bg-[var(--color-bg-subtle)] pb-20">
-      <header className="sticky top-0 z-50 border-b border-[var(--color-border)] bg-white/80 backdrop-blur-sm">
-        <div className="container mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
+      <SiteHeader
+        showSearch
+        searchPlaceholder="Cari kamera, stroller, drone..."
+        searchValue={q}
+        onSearchChange={(value) => resetPageAnd(() => setQ(value))}
+      />
+
+      <PageHeader
+        title="Jelajahi Barang"
+        description={`${total} barang ditemukan`}
+        actions={
           <button
-            className="rounded-md border border-[var(--color-border)] p-2 text-slate-600 md:hidden"
+            className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-surface px-3 py-2 text-sm font-semibold text-slate-700 shadow-soft-sm lg:hidden"
             type="button"
-            aria-label="Buka filter"
             onClick={() => setIsFilterOpen(true)}
           >
             <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
+            Filter
           </button>
-          <a className="text-xl font-bold text-primary" href="/">
-            RentEase
-          </a>
-          <label className="ml-auto flex w-full max-w-xl items-center gap-2 rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 transition-shadow focus-within:shadow-md">
-            <Search className="h-4 w-4 text-slate-400" aria-hidden="true" />
-            <input
-              className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
-              placeholder="Cari kamera, stroller, drone..."
-              type="search"
-              value={q}
-              onChange={(event) => resetPageAnd(() => setQ(event.target.value))}
-            />
-          </label>
-        </div>
-      </header>
+        }
+      />
 
-      <div className="container mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[280px_1fr] lg:px-8">
-        <aside className="sticky top-24 hidden self-start rounded-lg border border-[var(--color-border)] bg-white p-6 lg:block">
+      <PageContainer className="pb-4 lg:hidden">
+        <label className="flex w-full items-center gap-2 rounded-md border border-[var(--color-border)] bg-surface px-4 py-3 shadow-inset-soft">
+          <Search className="h-4 w-4 text-slate-400" aria-hidden="true" />
+          <input
+            className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+            placeholder="Cari kamera, stroller, drone..."
+            type="search"
+            value={q}
+            onChange={(event) => resetPageAnd(() => setQ(event.target.value))}
+          />
+        </label>
+      </PageContainer>
+
+      <PageContainer className="grid gap-6 pb-12 lg:grid-cols-[280px_1fr]">
+        <aside className="sticky top-24 hidden self-start rounded-lg border border-[var(--color-border)] bg-surface p-5 shadow-soft-sm lg:block">
           {filters}
         </aside>
 
         <section>
-          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">Jelajahi Barang</h1>
-              <p className="mt-1 text-sm text-slate-500">{total} barang ditemukan</p>
-            </div>
-          </div>
-
           {isLoading && page === 1 ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {Array.from({ length: 8 }).map((_, index) => (
@@ -226,7 +240,7 @@ function ExploreContent() {
               {listings.length < total && (
                 <div className="mt-8 flex justify-center">
                   <button
-                    className="rounded-md bg-primary px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover active:scale-95 disabled:opacity-60"
+                    className="rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-white shadow-soft-sm transition-colors hover:bg-primary-hover active:scale-95 disabled:opacity-60"
                     disabled={isLoading}
                     type="button"
                     onClick={() => setPage((current) => current + 1)}
@@ -237,8 +251,10 @@ function ExploreContent() {
               )}
             </>
           ) : (
-            <div className="flex min-h-[360px] flex-col items-center justify-center rounded-lg border border-dashed border-[var(--color-border)] bg-white p-8 text-center">
-              <PackageOpen className="h-16 w-16 text-slate-300" aria-hidden="true" />
+            <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-[var(--color-border)] bg-surface p-8 text-center shadow-soft-sm">
+              <span className="flex h-14 w-14 items-center justify-center rounded-lg bg-surface-sunken text-primary-text">
+                <PackageOpen className="h-10 w-10" aria-hidden="true" />
+              </span>
               <h2 className="mt-4 text-xl font-semibold text-slate-900">
                 Tidak ada barang yang cocok
               </h2>
@@ -246,7 +262,7 @@ function ExploreContent() {
                 Coba ubah kata kunci, kategori, atau rentang harga.
               </p>
               <button
-                className="mt-5 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover active:scale-95"
+                className="mt-5 rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-soft-sm transition-colors hover:bg-primary-hover active:scale-95"
                 type="button"
                 onClick={resetFilters}
               >
@@ -255,15 +271,15 @@ function ExploreContent() {
             </div>
           )}
         </section>
-      </div>
+      </PageContainer>
 
       {isFilterOpen && (
         <div className="fixed inset-0 z-[60] bg-slate-950/40 lg:hidden">
-          <div className="absolute bottom-0 left-0 right-0 rounded-t-lg bg-white p-6">
+          <div className="absolute bottom-0 left-0 right-0 rounded-t-lg bg-surface p-6 shadow-soft">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-slate-900">Filter</h2>
               <button
-                className="rounded-md p-2 text-slate-500"
+                className="rounded-md bg-surface-sunken p-2 text-slate-500"
                 type="button"
                 aria-label="Tutup filter"
                 onClick={() => setIsFilterOpen(false)}
@@ -275,6 +291,7 @@ function ExploreContent() {
           </div>
         </div>
       )}
+      <MobileBottomNav />
     </main>
   );
 }

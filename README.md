@@ -21,7 +21,7 @@ apps/
 packages/
   db/         Drizzle schema and database helpers
   shared/     Shared constants and TypeScript types
-docs/         Product and architecture notes
+docs/         Product, business, design, environment, and architecture notes
 ```
 
 ## Getting Started
@@ -43,3 +43,5 @@ The current repository is only the initial scaffold. Implementation should follo
 4. Renter/lender dashboards and order management
 5. Rating, KYC upload, notifications, and basic disputes
 6. Polish, performance, and production deployment
+
+Business assumptions, revenue model, go-to-market, and operational rules are tracked in `docs/business_model.md`.

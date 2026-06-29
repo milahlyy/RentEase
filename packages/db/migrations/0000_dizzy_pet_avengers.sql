@@ -5,10 +5,13 @@ CREATE TABLE `bookings` (
 	`lender_id` text NOT NULL,
 	`start_date` text NOT NULL,
 	`end_date` text NOT NULL,
-	`total_price` integer NOT NULL,
-	`deposit` integer NOT NULL,
+	`rental_price` integer NOT NULL,
+	`deposit_amount` integer NOT NULL,
+	`delivery_fee` integer DEFAULT 0 NOT NULL,
+	`late_fee` integer DEFAULT 0 NOT NULL,
 	`delivery_method` text NOT NULL,
-	`status` text NOT NULL,
+	`status` text DEFAULT 'pending_owner' NOT NULL,
+	`whatsapp_unlocked_at` text,
 	`created_at` text NOT NULL,
 	FOREIGN KEY (`listing_id`) REFERENCES `listings`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`renter_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
@@ -20,7 +23,7 @@ CREATE TABLE `disputes` (
 	`booking_id` text NOT NULL,
 	`raised_by` text NOT NULL,
 	`reason` text NOT NULL,
-	`status` text NOT NULL,
+	`status` text DEFAULT 'open' NOT NULL,
 	`resolved_at` text,
 	FOREIGN KEY (`booking_id`) REFERENCES `bookings`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`raised_by`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
@@ -39,7 +42,9 @@ CREATE TABLE `kyc_documents` (
 CREATE TABLE `listing_availability` (
 	`id` text PRIMARY KEY NOT NULL,
 	`listing_id` text NOT NULL,
-	`blocked_date` text NOT NULL,
+	`start_date` text NOT NULL,
+	`end_date` text NOT NULL,
+	`reason` text,
 	FOREIGN KEY (`listing_id`) REFERENCES `listings`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
@@ -72,7 +77,8 @@ CREATE TABLE `payments` (
 	`booking_id` text NOT NULL,
 	`midtrans_order_id` text NOT NULL,
 	`amount` integer NOT NULL,
-	`status` text NOT NULL,
+	`type` text NOT NULL,
+	`status` text DEFAULT 'pending' NOT NULL,
 	`paid_at` text,
 	FOREIGN KEY (`booking_id`) REFERENCES `bookings`(`id`) ON UPDATE no action ON DELETE no action
 );

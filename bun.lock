@@ -59,6 +59,7 @@
       "name": "@rentease/db",
       "version": "0.1.0",
       "dependencies": {
+        "@rentease/shared": "workspace:*",
         "bcryptjs": "^3.0.3",
         "drizzle-orm": "^0.32.0",
       },
@@ -69,6 +70,9 @@
     "packages/shared": {
       "name": "@rentease/shared",
       "version": "0.1.0",
+      "devDependencies": {
+        "typescript": "^5.5.3",
+      },
     },
   },
   "packages": {

@@ -54,6 +54,12 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password wajib diisi"),
 });
 
+const updateProfileSchema = z.object({
+  avatarUrl: z.string().url("URL foto profil tidak valid").nullable().optional(),
+  name: z.string().trim().min(2, "Nama lengkap minimal 2 karakter"),
+  phone: z.string().trim().min(8, "Nomor telepon minimal 8 karakter").nullable(),
+});
+
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 const oneMinute = 60_000;
 const jwtTtlSeconds = 60 * 60 * 24 * 7;
@@ -72,38 +78,6 @@ function getIp(request: Request): string {
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     "unknown"
   );
-}
-
-async function ensureAuthTables(db: D1Database) {
-  await db
-    .prepare(
-      `CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        email TEXT NOT NULL UNIQUE,
-        password_hash TEXT NOT NULL,
-        name TEXT NOT NULL,
-        phone TEXT,
-        role TEXT NOT NULL DEFAULT 'renter',
-        avatar_url TEXT,
-        is_verified INTEGER NOT NULL DEFAULT 0,
-        created_at TEXT NOT NULL
-      )`,
-    )
-    .run();
-
-  await db
-    .prepare(
-      `CREATE TABLE IF NOT EXISTS kyc_documents (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        ktp_url TEXT NOT NULL,
-        selfie_url TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'pending',
-        reviewed_at TEXT,
-        FOREIGN KEY (user_id) REFERENCES users(id)
-      )`,
-    )
-    .run();
 }
 
 function toUser(row: UserRow): User {
@@ -159,26 +133,33 @@ async function signJwt(payload: JwtPayload, secret: string): Promise<string> {
 }
 
 async function verifyJwt(token: string, secret: string): Promise<JwtPayload | null> {
-  const [encodedHeader, encodedPayload, encodedSignature] = token.split(".");
+  try {
+    const [encodedHeader, encodedPayload, encodedSignature] = token.split(".");
 
-  if (!encodedHeader || !encodedPayload || !encodedSignature) {
+    if (!encodedHeader || !encodedPayload || !encodedSignature) {
+      return null;
+    }
+
+    const parsedPayload = JSON.parse(base64UrlDecode(encodedPayload)) as JwtPayload;
+    const expected = await signJwt(parsedPayload, secret);
+    const expectedSignature = expected.split(".")[2];
+
+    if (encodedSignature !== expectedSignature) {
+      return null;
+    }
+
+    if (!parsedPayload.sub || typeof parsedPayload.exp !== "number") {
+      return null;
+    }
+
+    if (parsedPayload.exp <= Math.floor(Date.now() / 1000)) {
+      return null;
+    }
+
+    return parsedPayload;
+  } catch {
     return null;
   }
-
-  const expected = await signJwt(JSON.parse(base64UrlDecode(encodedPayload)), secret);
-  const expectedSignature = expected.split(".")[2];
-
-  if (encodedSignature !== expectedSignature) {
-    return null;
-  }
-
-  const payload = JSON.parse(base64UrlDecode(encodedPayload)) as JwtPayload;
-
-  if (payload.exp <= Math.floor(Date.now() / 1000)) {
-    return null;
-  }
-
-  return payload;
 }
 
 function getBearerToken(request: Request): string | null {
@@ -230,8 +211,6 @@ auth.use("/login", async (c, next) => {
 });
 
 auth.post("/register", async (c) => {
-  await ensureAuthTables(c.env.DB);
-
   const payload = registerSchema.safeParse(await c.req.json().catch(() => null));
 
   if (!payload.success) {
@@ -279,8 +258,6 @@ auth.post("/register", async (c) => {
 });
 
 auth.post("/login", async (c) => {
-  await ensureAuthTables(c.env.DB);
-
   const payload = loginSchema.safeParse(await c.req.json().catch(() => null));
 
   if (!payload.success) {
@@ -309,8 +286,6 @@ auth.post("/login", async (c) => {
 });
 
 auth.get("/me", async (c) => {
-  await ensureAuthTables(c.env.DB);
-
   const token = getBearerToken(c.req.raw);
 
   if (!token) {
@@ -322,6 +297,38 @@ auth.get("/me", async (c) => {
   if (!payload) {
     return c.json(failure("Token tidak valid atau sudah kedaluwarsa"), 401);
   }
+
+  const user = await getUserById(c.env.DB, payload.sub);
+
+  if (!user) {
+    return c.json(failure("User tidak ditemukan"), 404);
+  }
+
+  return c.json(success({ user }));
+});
+
+auth.patch("/me", async (c) => {
+  const token = getBearerToken(c.req.raw);
+
+  if (!token) {
+    return c.json(failure("Token tidak ditemukan"), 401);
+  }
+
+  const payload = await verifyJwt(token, c.env.JWT_SECRET);
+
+  if (!payload) {
+    return c.json(failure("Token tidak valid atau sudah kedaluwarsa"), 401);
+  }
+
+  const body = updateProfileSchema.safeParse(await c.req.json().catch(() => null));
+
+  if (!body.success) {
+    return c.json(failure(body.error.issues[0]?.message ?? "Data profil tidak valid"), 400);
+  }
+
+  await c.env.DB.prepare("UPDATE users SET name = ?, phone = ?, avatar_url = ? WHERE id = ?")
+    .bind(body.data.name, body.data.phone, body.data.avatarUrl ?? null, payload.sub)
+    .run();
 
   const user = await getUserById(c.env.DB, payload.sub);
 

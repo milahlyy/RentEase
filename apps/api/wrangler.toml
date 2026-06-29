@@ -5,7 +5,7 @@ compatibility_date = "2026-06-09"
 [[d1_databases]]
 binding = "DB"
 database_name = "rentease"
-database_id = "replace-with-d1-database-id"
+database_id = "46f27ac6-6d04-4a5e-a937-b1d579ca6a1a"
 migrations_dir = "../../packages/db/migrations"
 
 [[r2_buckets]]

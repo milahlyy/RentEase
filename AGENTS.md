@@ -19,6 +19,7 @@ Prioritas produk: trust, clarity, dan transaksi yang mudah dipahami. Jangan memb
 ## Source Of Truth
 
 - Product requirements: `docs/RentEase_PRD.md`
+- Business model and go-to-market: `docs/business_model.md`
 - Architecture notes: `docs/architecture.md`
 - Design system: `docs/DESIGN.md`
 - Environment notes: `docs/environment.md`
@@ -56,10 +57,10 @@ Jika dependency belum ter-install, jangan mengubah `packageManager` atau pindah 
 
 Ikuti `docs/DESIGN.md` untuk semua UI. Ringkasan aturan wajib:
 
-- Vibe: trustworthy marketplace, clean, spacious, confident.
+- Vibe: grounded trust marketplace, clean, practical, approachable.
 - UI harus mengurangi kecemasan P2P rental lewat status yang jelas, copy spesifik, dan CTA yang tidak membingungkan.
 - Gunakan Plus Jakarta Sans via `next/font/google` untuk frontend.
-- Primary action color: blue palette dari design tokens.
+- Primary action color: deep teal dari design tokens.
 - Harga selalu `font-bold text-primary`.
 - Listing card wajib menampilkan gambar, nama, harga/hari, dan rating atau badge `Baru`.
 - Status badge harus konsisten dengan mapping warna di `docs/DESIGN.md`.

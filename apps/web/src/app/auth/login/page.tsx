@@ -8,10 +8,11 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { apiRequest } from "../../../lib/api";
+import { setStoredToken } from "../../../lib/auth-client";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Format email tidak valid"),
-  password: z.string().min(1, "Password wajib diisi"),
+  password: z.string().min(1, "Kata sandi wajib diisi"),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -52,7 +53,7 @@ export default function LoginPage() {
       return;
     }
 
-    localStorage.setItem("rentease_token", response.data.token);
+    setStoredToken(response.data.token);
     router.push("/");
   }
 
@@ -62,16 +63,16 @@ export default function LoginPage() {
         <Link className="mx-auto mb-6 block text-center text-2xl font-bold text-primary" href="/">
           RentEase
         </Link>
-        <div className="rounded-lg border border-[var(--color-border)] bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-[var(--color-border)] bg-surface-raised p-6 shadow-soft">
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-slate-900">Masuk</h1>
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              Lanjutkan untuk mengelola rental dan booking kamu.
+              Lanjutkan untuk mengelola sewa dan pemesanan kamu.
             </p>
           </div>
 
           <button
-            className="flex w-full items-center justify-center rounded-md border border-[var(--color-border)] bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 active:scale-95"
+            className="flex w-full items-center justify-center rounded-lg border border-[var(--color-border)] bg-surface px-4 py-3 text-sm font-semibold text-slate-700 shadow-soft-sm transition-shadow hover:shadow-soft active:scale-95"
             type="button"
           >
             Lanjutkan dengan Google
@@ -91,7 +92,7 @@ export default function LoginPage() {
                 Email <span className="text-red-600">*</span>
               </label>
               <input
-                className={`w-full rounded-md border bg-white px-3 py-2.5 text-sm outline-none transition-colors placeholder:text-slate-400 focus:border-primary ${
+                className={`w-full rounded-lg border bg-surface px-3 py-2.5 text-sm outline-none shadow-inset-soft transition-colors placeholder:text-slate-400 focus:border-primary ${
                   errors.email ? "border-red-500" : "border-[var(--color-border)]"
                 }`}
                 id="email"
@@ -104,14 +105,14 @@ export default function LoginPage() {
 
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-slate-700" htmlFor="password">
-                Password <span className="text-red-600">*</span>
+                Kata sandi <span className="text-red-600">*</span>
               </label>
               <input
-                className={`w-full rounded-md border bg-white px-3 py-2.5 text-sm outline-none transition-colors placeholder:text-slate-400 focus:border-primary ${
+                className={`w-full rounded-lg border bg-surface px-3 py-2.5 text-sm outline-none shadow-inset-soft transition-colors placeholder:text-slate-400 focus:border-primary ${
                   errors.password ? "border-red-500" : "border-[var(--color-border)]"
                 }`}
                 id="password"
-                placeholder="Masukkan password"
+                placeholder="Masukkan kata sandi"
                 type="password"
                 {...register("password")}
               />
@@ -121,13 +122,13 @@ export default function LoginPage() {
             </div>
 
             {formError && (
-              <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                 {formError}
               </p>
             )}
 
             <button
-              className="flex w-full items-center justify-center rounded-md bg-primary px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-full items-center justify-center rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white shadow-soft-sm transition-colors hover:bg-primary-hover active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
               disabled={isSubmitting}
               type="submit"
             >

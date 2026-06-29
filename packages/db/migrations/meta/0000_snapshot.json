@@ -49,19 +49,35 @@
           "notNull": true,
           "autoincrement": false
         },
-        "total_price": {
-          "name": "total_price",
+        "rental_price": {
+          "name": "rental_price",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "deposit": {
-          "name": "deposit",
+        "deposit_amount": {
+          "name": "deposit_amount",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "delivery_fee": {
+          "name": "delivery_fee",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "late_fee": {
+          "name": "late_fee",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
         },
         "delivery_method": {
           "name": "delivery_method",
@@ -75,6 +91,14 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false,
+          "default": "'pending_owner'"
+        },
+        "whatsapp_unlocked_at": {
+          "name": "whatsapp_unlocked_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "created_at": {
@@ -166,7 +190,8 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "'open'"
         },
         "resolved_at": {
           "name": "resolved_at",
@@ -291,11 +316,25 @@
           "notNull": true,
           "autoincrement": false
         },
-        "blocked_date": {
-          "name": "blocked_date",
+        "start_date": {
+          "name": "start_date",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "end_date": {
+          "name": "end_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         }
       },
@@ -509,12 +548,20 @@
           "notNull": true,
           "autoincrement": false
         },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "status": {
           "name": "status",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "'pending'"
         },
         "paid_at": {
           "name": "paid_at",

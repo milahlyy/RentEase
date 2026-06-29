@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "wrangler deploy --dry-run",
-    "dev": "XDG_CONFIG_HOME=../../.wrangler-config wrangler dev src/index.ts",
+    "dev": "XDG_CONFIG_HOME=../../.wrangler-config wrangler dev src/index.ts --log-level none",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit"
   },
