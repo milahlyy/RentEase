@@ -2,6 +2,15 @@ name = "rentease-api"
 main = "src/index.ts"
 compatibility_date = "2026-06-09"
 
+[vars]
+ALLOWED_ORIGINS = "https://rentease.milahly.top,http://localhost:3000,http://localhost:3001"
+APP_URL = "https://rentease.milahly.top"
+ENVIRONMENT = "demo"
+
+[[routes]]
+pattern = "api-rentease.milahly.top"
+custom_domain = true
+
 [[d1_databases]]
 binding = "DB"
 database_name = "rentease"

@@ -25,6 +25,7 @@ export const users = sqliteTable("users", {
   role: text("role", { enum: userRoles }).notNull().default("renter"),
   avatarUrl: text("avatar_url"),
   isVerified: integer("is_verified", { mode: "boolean" }).notNull().default(false),
+  isAdmin: integer("is_admin", { mode: "boolean" }).notNull().default(false),
   createdAt: text("created_at").notNull(),
 });
 

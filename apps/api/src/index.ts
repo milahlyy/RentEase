@@ -10,18 +10,41 @@ import { uploadsRoute } from "./uploads";
 
 type AppBindings = Bindings & {
   ASSETS: R2Bucket;
+  ALLOWED_ORIGINS?: string;
   MIDTRANS_SERVER_KEY: string;
   RESEND_API_KEY: string;
 };
 
 const app = new Hono<{ Bindings: AppBindings }>();
+const defaultAllowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://rentease.milahly.top",
+];
+
+function getAllowedOrigins(value?: string) {
+  const configured =
+    value
+      ?.split(",")
+      .map((origin) => origin.trim())
+      .filter(Boolean) ?? [];
+
+  return new Set([...defaultAllowedOrigins, ...configured]);
+}
 
 app.use(
   "*",
   cors({
-    origin: ["http://localhost:3000", "http://localhost:3001"],
+    origin: (origin, c) => {
+      if (!origin) {
+        return null;
+      }
+
+      return getAllowedOrigins(c.env.ALLOWED_ORIGINS).has(origin) ? origin : null;
+    },
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    credentials: true,
   }),
 );
 

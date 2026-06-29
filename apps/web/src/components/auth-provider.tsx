@@ -10,7 +10,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { clearStoredToken, fetchCurrentUser, getStoredToken } from "../lib/auth-client";
+import {
+  clearStoredToken,
+  fetchCurrentUser,
+  getStoredToken,
+  logoutSession,
+} from "../lib/auth-client";
 
 type AuthContextValue = {
   error: string | null;
@@ -60,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    void logoutSession();
     clearStoredToken();
     setUser(null);
     setHasToken(false);

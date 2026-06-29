@@ -22,6 +22,7 @@ type SeedUser = {
   phone: string;
   role: "renter" | "lender" | "both";
   isVerified: boolean;
+  isAdmin?: boolean;
 };
 
 type SeedListing = {
@@ -67,6 +68,7 @@ const seedUsers: SeedUser[] = [
     phone: "081234567001",
     role: "renter",
     isVerified: false,
+    isAdmin: true,
   },
   {
     id: "seed-user-siti",
@@ -1079,6 +1081,7 @@ try {
         phone: user.phone,
         role: user.role,
         avatarUrl: null,
+        isAdmin: user.isAdmin ?? false,
         isVerified: user.isVerified,
         createdAt: nowIso,
       }));
@@ -1091,6 +1094,7 @@ try {
       tx.update(users)
         .set({
           avatarUrl: null,
+          isAdmin: user.isAdmin ?? false,
           isVerified: user.isVerified,
           name: user.name,
           phone: user.phone,

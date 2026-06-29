@@ -6,6 +6,7 @@ import type { User, UserRole } from "@rentease/shared";
 type Bindings = {
   DB: D1Database;
   JWT_SECRET: string;
+  ALLOWED_ORIGINS?: string;
 };
 
 type Variables = {
@@ -31,6 +32,7 @@ type UserRow = {
   role: UserRole;
   avatar_url: string | null;
   is_verified: number;
+  is_admin: number;
   created_at: string;
   kyc_status: "pending" | "verified" | "rejected" | null;
 };
@@ -63,6 +65,7 @@ const updateProfileSchema = z.object({
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 const oneMinute = 60_000;
 const jwtTtlSeconds = 60 * 60 * 24 * 7;
+const authCookieName = "rentease_session";
 
 function success<T>(data: T): ApiResponse<T> {
   return { success: true, data };
@@ -89,9 +92,66 @@ function toUser(row: UserRow): User {
     role: row.role,
     avatarUrl: row.avatar_url,
     isVerified: Boolean(row.is_verified),
+    isAdmin: Boolean(row.is_admin),
     kycStatus: row.kyc_status ?? "pending",
     createdAt: row.created_at,
   };
+}
+
+function isSecureRequest(request: Request): boolean {
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+
+  if (forwardedProto) {
+    return forwardedProto === "https";
+  }
+
+  return new URL(request.url).protocol === "https:";
+}
+
+function cookieParts(request: Request, maxAge: number) {
+  return [
+    `Max-Age=${maxAge}`,
+    "Path=/",
+    "HttpOnly",
+    "SameSite=Lax",
+    isSecureRequest(request) ? "Secure" : "",
+  ].filter(Boolean);
+}
+
+function setAuthCookie(c: { req: { raw: Request }; header: (name: string, value: string, options?: { append?: boolean }) => void }, token: string) {
+  c.header(
+    "Set-Cookie",
+    [`${authCookieName}=${encodeURIComponent(token)}`, ...cookieParts(c.req.raw, jwtTtlSeconds)].join(
+      "; ",
+    ),
+    { append: true },
+  );
+}
+
+function clearAuthCookie(c: { req: { raw: Request }; header: (name: string, value: string, options?: { append?: boolean }) => void }) {
+  c.header(
+    "Set-Cookie",
+    [`${authCookieName}=`, ...cookieParts(c.req.raw, 0)].join("; "),
+    { append: true },
+  );
+}
+
+function getCookieValue(request: Request, name: string): string | null {
+  const cookie = request.headers.get("Cookie");
+
+  if (!cookie) {
+    return null;
+  }
+
+  for (const part of cookie.split(";")) {
+    const [key, ...valueParts] = part.trim().split("=");
+
+    if (key === name) {
+      return decodeURIComponent(valueParts.join("="));
+    }
+  }
+
+  return null;
 }
 
 function base64UrlEncode(value: string | ArrayBuffer): string {
@@ -163,6 +223,12 @@ async function verifyJwt(token: string, secret: string): Promise<JwtPayload | nu
 }
 
 function getBearerToken(request: Request): string | null {
+  const cookieToken = getCookieValue(request, authCookieName);
+
+  if (cookieToken) {
+    return cookieToken;
+  }
+
   const authorization = request.headers.get("Authorization");
 
   if (!authorization?.startsWith("Bearer ")) {
@@ -253,8 +319,9 @@ auth.post("/register", async (c) => {
     { sub: user.id, exp: Math.floor(Date.now() / 1000) + jwtTtlSeconds },
     c.env.JWT_SECRET,
   );
+  setAuthCookie(c, token);
 
-  return c.json(success({ token, user }), 201);
+  return c.json(success({ user }), 201);
 });
 
 auth.post("/login", async (c) => {
@@ -281,8 +348,15 @@ auth.post("/login", async (c) => {
     { sub: user.id, exp: Math.floor(Date.now() / 1000) + jwtTtlSeconds },
     c.env.JWT_SECRET,
   );
+  setAuthCookie(c, token);
 
-  return c.json(success({ token, user }));
+  return c.json(success({ user }));
+});
+
+auth.post("/logout", (c) => {
+  clearAuthCookie(c);
+
+  return c.json(success({ loggedOut: true }));
 });
 
 auth.get("/me", async (c) => {

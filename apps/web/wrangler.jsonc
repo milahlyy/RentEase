@@ -1,0 +1,24 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "rentease-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-06-09",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "routes": [
+    {
+      "pattern": "rentease.milahly.top",
+      "custom_domain": true
+    }
+  ],
+  "vars": {
+    "NEXT_PUBLIC_APP_URL": "https://rentease.milahly.top",
+    "NEXT_PUBLIC_API_URL": "https://api-rentease.milahly.top"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

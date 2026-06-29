@@ -197,6 +197,7 @@ export type User = {
   role: UserRole;
   avatarUrl: string | null;
   isVerified: boolean;
+  isAdmin: boolean;
   kycStatus: KycStatus;
   createdAt: string;
 };

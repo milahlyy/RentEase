@@ -15,6 +15,10 @@ const nextConfig = {
         hostname: "localhost",
         port: "8787",
       },
+      {
+        protocol: "https",
+        hostname: "api-rentease.milahly.top",
+      },
     ],
   },
   transpilePackages: ["@rentease/shared"],

@@ -20,7 +20,11 @@ const registerSchema = z.object({
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 type RegisterResponse = {
-  token: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+  };
 };
 
 export default function RegisterPage() {
@@ -52,7 +56,7 @@ export default function RegisterPage() {
       return;
     }
 
-    setStoredToken(response.data.token);
+    setStoredToken();
     router.push("/");
   }
 

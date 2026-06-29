@@ -21,8 +21,13 @@ export async function apiRequest<T>(
       headers.set("Content-Type", "application/json");
     }
 
+    if (headers.get("Authorization") === "Bearer cookie-session") {
+      headers.delete("Authorization");
+    }
+
     const response = await fetch(`${apiUrl}${path}`, {
       ...options,
+      credentials: "include",
       headers,
     });
     const json = (await response.json()) as ApiResponse<T>;

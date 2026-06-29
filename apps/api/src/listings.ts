@@ -12,6 +12,7 @@ import {
   type ListingPhoto,
   type ListingReview,
 } from "@rentease/shared";
+import { activeBookingStatusesSql } from "./booking-workflow";
 
 type ListingRow = {
   id: string;
@@ -496,7 +497,7 @@ listingsRoute.get("/:id", async (c) => {
     `SELECT id, listing_id, start_date, end_date
      FROM bookings
      WHERE listing_id = ?
-       AND status IN ('pending_owner', 'awaiting_payment', 'confirmed', 'ready_for_pickup', 'in_transit', 'active', 'return_pending', 'disputed')
+       AND status IN (${activeBookingStatusesSql})
      ORDER BY start_date ASC`,
   )
     .bind(row.id)

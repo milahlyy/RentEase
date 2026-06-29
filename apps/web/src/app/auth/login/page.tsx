@@ -18,7 +18,6 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 type LoginResponse = {
-  token: string;
   user: {
     id: string;
     email: string;
@@ -53,7 +52,7 @@ export default function LoginPage() {
       return;
     }
 
-    setStoredToken(response.data.token);
+    setStoredToken();
     router.push("/");
   }
 

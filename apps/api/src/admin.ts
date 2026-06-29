@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { failure, getBearerToken, success, verifyJwt, type Bindings } from "./auth";
+import { activeBookingStatusesSql } from "./booking-workflow";
 
 type AuthResult =
   | { success: true; userId: string; email: string; name: string }
@@ -9,7 +10,6 @@ type CountRow = {
   total: number;
 };
 
-const adminEmails = new Set(["rendy@rentease.local", "admin@rentease.local"]);
 const adminRoute = new Hono<{ Bindings: Bindings }>();
 
 async function requireAdmin(c: { env: Bindings; req: { raw: Request } }): Promise<AuthResult> {
@@ -25,11 +25,11 @@ async function requireAdmin(c: { env: Bindings; req: { raw: Request } }): Promis
     return { success: false, error: "Token tidak valid atau sudah kedaluwarsa", status: 401 };
   }
 
-  const user = await c.env.DB.prepare("SELECT id, email, name FROM users WHERE id = ? LIMIT 1")
+  const user = await c.env.DB.prepare("SELECT id, email, name, is_admin FROM users WHERE id = ? LIMIT 1")
     .bind(payload.sub)
-    .first<{ id: string; email: string; name: string }>();
+    .first<{ id: string; email: string; name: string; is_admin: number }>();
 
-  if (!user || !adminEmails.has(user.email)) {
+  if (!user || !user.is_admin) {
     return { success: false, error: "Akun ini tidak punya akses admin", status: 403 };
   }
 
@@ -57,7 +57,7 @@ adminRoute.get("/summary", async (c) => {
         c.env.DB,
         `SELECT COUNT(*) AS total
          FROM bookings
-         WHERE status IN ('pending_owner', 'awaiting_payment', 'confirmed', 'ready_for_pickup', 'active', 'return_pending', 'disputed')`,
+         WHERE status IN (${activeBookingStatusesSql})`,
       ),
       count(c.env.DB, "SELECT COUNT(*) AS total FROM kyc_documents WHERE status = 'pending'"),
       count(c.env.DB, "SELECT COUNT(*) AS total FROM disputes WHERE status != 'cancelled'"),

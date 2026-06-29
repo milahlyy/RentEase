@@ -12,6 +12,14 @@
 - Midtrans sandbox credentials only if real payment sandbox is explicitly tested later
 - Resend API key
 
+## Cloudflare Demo Deployment
+
+Use `docs/CLOUDFLARE_DEPLOYMENT.md` for the current demo deployment checklist.
+
+- Web domain: `https://rentease.milahly.top`
+- API domain: `https://api-rentease.milahly.top`
+- Payment remains `Simulasi Pembayaran Platform` for the demo.
+
 ## Local Development Notes
 
 - Keep secrets in `.env` or `.dev.vars`.

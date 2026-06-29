@@ -11,6 +11,12 @@ import {
   type DeliveryMethod,
   type EvidencePhotoType,
 } from "@rentease/shared";
+import {
+  activeBookingStatusesSql,
+  allowedEvidenceStatuses,
+  evidenceOwnerFor,
+  lifecycleTransitions,
+} from "./booking-workflow";
 
 type BookingBindings = Bindings & {
   ASSETS: R2Bucket;
@@ -299,10 +305,6 @@ function latestEvidenceByType(evidence: ConditionEvidence[], type: EvidencePhoto
   return evidence.filter((item) => item.type === type).at(-1) ?? null;
 }
 
-function evidenceOwnerFor(type: EvidencePhotoType) {
-  return type === "pre_handover_owner" || type === "post_return_owner" ? "lender" : "renter";
-}
-
 bookingsRoute.post("/", async (c) => {
   const auth = await requireUserId(c);
 
@@ -380,7 +382,7 @@ bookingsRoute.post("/", async (c) => {
     `SELECT id
      FROM bookings
      WHERE listing_id = ?
-       AND status IN ('pending_owner', 'awaiting_payment', 'confirmed', 'ready_for_pickup', 'in_transit', 'active', 'return_pending', 'disputed')
+       AND status IN (${activeBookingStatusesSql})
        AND start_date <= ?
        AND end_date >= ?
      LIMIT 1`,
@@ -579,14 +581,7 @@ bookingsRoute.post("/:id/evidence", async (c) => {
     return c.json(failure("Bukti tahap ini harus diunggah penyewa"), 403);
   }
 
-  const allowedStatuses: Record<EvidencePhotoType, BookingStatus[]> = {
-    post_return_owner: ["return_pending", "completed"],
-    pre_handover_owner: ["confirmed", "ready_for_pickup"],
-    pre_return_renter: ["active", "return_pending"],
-    received_by_renter: ["ready_for_pickup", "active"],
-  };
-
-  if (!allowedStatuses[type.data].includes(detail.booking.status)) {
+  if (!allowedEvidenceStatuses[type.data].includes(detail.booking.status)) {
     return c.json(failure("Foto bukti ini belum sesuai dengan tahap transaksi saat ini"), 409);
   }
 
@@ -651,41 +646,7 @@ bookingsRoute.patch("/:id/lifecycle", async (c) => {
     return c.json(failure("Kamu tidak punya akses ke booking ini"), 403);
   }
 
-  const transitions: Record<
-    typeof body.data.action,
-    {
-      evidenceType: EvidencePhotoType;
-      from: BookingStatus;
-      role: "lender" | "renter";
-      to: BookingStatus;
-    }
-  > = {
-    confirm_received: {
-      evidenceType: "received_by_renter",
-      from: "ready_for_pickup",
-      role: "renter",
-      to: "active",
-    },
-    confirm_return_good: {
-      evidenceType: "post_return_owner",
-      from: "return_pending",
-      role: "lender",
-      to: "completed",
-    },
-    mark_ready: {
-      evidenceType: "pre_handover_owner",
-      from: "confirmed",
-      role: "lender",
-      to: "ready_for_pickup",
-    },
-    request_return: {
-      evidenceType: "pre_return_renter",
-      from: "active",
-      role: "renter",
-      to: "return_pending",
-    },
-  };
-  const transition = transitions[body.data.action];
+  const transition = lifecycleTransitions[body.data.action];
 
   if (transition.role === "lender" && detail.booking.lenderId !== auth.userId) {
     return c.json(failure("Aksi ini hanya bisa dilakukan pemilik barang"), 403);

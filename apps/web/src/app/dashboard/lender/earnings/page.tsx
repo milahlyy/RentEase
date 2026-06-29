@@ -1,3 +1,5 @@
+"use client";
+
 import { WalletCards } from "lucide-react";
 import { DashboardPlaceholderPage } from "../../../../components/dashboard-placeholder-page";
 
