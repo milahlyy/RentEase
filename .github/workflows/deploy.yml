@@ -41,10 +41,16 @@ jobs:
 
       - name: Build Next.js
         working-directory: apps/web
+        env:
+          NEXT_PUBLIC_API_URL: https://api-rentease.milahly.top
+          NEXT_PUBLIC_APP_URL: https://rentease.milahly.top
         run: bun run build
 
       - name: Build Cloudflare Worker
         working-directory: apps/web
+        env:
+          NEXT_PUBLIC_API_URL: https://api-rentease.milahly.top
+          NEXT_PUBLIC_APP_URL: https://rentease.milahly.top
         run: bun opennextjs-cloudflare build
 
       - name: Apply D1 migrations
